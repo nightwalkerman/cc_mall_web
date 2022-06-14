@@ -1,0 +1,246 @@
+{include file="public/header" /}
+<div id="app">
+
+        <el-row :gutter="20">
+            <el-form @submit.native.prevent :inline="true" size="small" class="demo-form-inline">
+                <el-col :span="24">
+                    <el-form-item>
+                        <el-date-picker id="date" v-model="searchForm.start_time" value-format="yyyy-MM-dd HH:mm:ss" type="datetime" placeholder="{:lang('start_time')}"></el-date-picker>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-date-picker id="date" v-model="searchForm.end_time" value-format="yyyy-MM-dd HH:mm:ss" type="datetime" placeholder="{:lang('end_time')}"></el-date-picker>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-input v-model="searchForm.system_order" clearable placeholder="{:lang('system_order')}"></el-input>
+                    </el-form-item>
+                    
+                    
+                    <el-form-item>
+                        <el-button type="primary" @click="search">{:lang('search')}</el-button>
+                    </el-form-item>
+
+                </el-col>
+                
+            </el-form>
+        </el-row>
+
+        <el-table
+            :data="tableData"
+            border
+            stripe
+            height="500"
+            size="small"
+            v-loading="dataLoading"
+            style="width: 100%">
+            <el-table-column width="210" prop="add_time" label="{:lang('add_time')}"></el-table-column>
+            <el-table-column width="450" prop="system_order" label="{:lang('system_order')}"></el-table-column>
+            <el-table-column prop="pay_status" label="{:lang('pay_status')}"></el-table-column>
+            <el-table-column align="right" prop="order_amount" label="{:lang('order_amount')}"></el-table-column>
+            <el-table-column align="center" fixed="right" label="{:lang('operation')}" width="60">
+                <template slot-scope="scope">
+                    <el-link type="primary" @click="one(scope)">{:lang('detail')}</el-link>
+                </template>
+            </el-table-column>
+        </el-table>
+    
+        <el-pagination
+                background
+                :page-sizes="[30, 60, 100, 200]"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="total" :page-size="limit"
+                @size-change="handleSizeChange"
+                @current-change="change">
+        </el-pagination>
+    
+    <el-dialog :title="dialogFormTitle" :visible.sync="dialogFormVisible" width='80%'>
+        <el-link style="color:#303133;font-size:16px;font-weight: 700" type="primary" @click="changeOrder">物流信息</el-link>
+        <el-descriptions class="margin-top" :column="1" border>
+            <el-descriptions-item >
+                <template slot="label">
+                    快递单号
+                </template>
+                <el-input  type="text" v-model="form.express_number"/>
+            </el-descriptions-item> 
+
+        </el-descriptions> 
+        
+        <el-link style="color:#303133;font-size:16px;font-weight: 700;margin-top:30px" type="primary">订单信息</el-link>
+        <el-descriptions class="margin-top" :column="3" border>
+            <el-descriptions-item >
+                <template slot="label">
+                    订单日期
+                </template>
+                <el-input  type="text" v-model="form.add_time"/>
+            </el-descriptions-item> 
+            <el-descriptions-item >
+                <template slot="label">
+                    订单编号
+                </template>
+                <el-input  type="text" v-model="form.system_order"/>
+            </el-descriptions-item> 
+            <el-descriptions-item >
+                <template slot="label">
+                    订单金额
+                </template>
+                <el-input  type="text" v-model="form.order_amount"/>
+            </el-descriptions-item> 
+            <el-descriptions-item >
+                <template slot="label">
+                    支付状态
+                </template>
+                <el-input  type="text" v-model="form.pay_status"/>
+            </el-descriptions-item> 
+            <el-descriptions-item >
+                <template slot="label">
+                    收货姓名
+                </template>
+                <el-input  type="text" v-model="form.username"/>
+            </el-descriptions-item> 
+            <el-descriptions-item >
+                <template slot="label">
+                    收货手机
+                </template>
+                <el-input  type="text" v-model="form.mobile"/>
+            </el-descriptions-item> 
+            <el-descriptions-item >
+                <template slot="label">
+                    收货地址
+                </template>
+                <el-input  type="text" v-model="form.address"/>
+            </el-descriptions-item> 
+
+        </el-descriptions>
+               
+        <el-link style="color:#303133;font-size:16px;font-weight: 700;margin-top:30px" type="primary">订单明细</el-link>        
+        <el-table
+            border
+            :data="form.orderGoods"
+            style="width: 100%">
+            <el-table-column
+                prop="goods_name"
+                label="商品名称"
+                >
+                <template slot-scope="scope">
+                    <el-input  type="text" v-model="scope.row.goods_name"/>
+                </template>
+            </el-table-column>
+            <el-table-column
+                prop="goods_price"
+                label="商品单价"
+                width="100">
+                <template slot-scope="scope">
+                    <el-input  type="text" v-model="scope.row.goods_price"/>
+                </template>
+            </el-table-column>
+            <el-table-column
+                prop="goods_number"
+                label="商品数量"
+                width="100">
+                <template slot-scope="scope">
+                    <el-input  type="text" v-model="scope.row.goods_number"/>
+                </template>
+            </el-table-column>
+        </el-table>
+    </el-dialog>
+</div>
+<script src="/static/js/http.js"></script>
+<script>
+    const url = "/manager/orderList"
+    var app1 = new Vue({
+        el: '#app',
+        data: {
+            tableData: [],
+            total: 0,
+            limit: 30,
+            page: 1,
+            searchForm: {
+                system_order: '',
+                merchant_order: '',
+                merchant_id: '',
+                pay_status: '',
+                start_time: '',
+                end_time: '',
+            },
+            dialogFormVisible: false,
+            form: {
+                order_id: '',
+                system_order: '',
+                order_amount: '',
+                add_time: '',
+                pay_status: '',
+                address: '',
+                name: '',
+                mobile: '',
+                orderGoods: [],
+            },
+            dialogFormTitle: "{:lang('detail')}",
+            loadBtn: false,
+            dataLoading: false,
+        },
+        created() {
+            this.testList()
+        },
+        methods: {
+            changeOrder() {
+                console.log(this.form)
+                postData = {...this.form,ccOption: 'updateOrder'}
+                http.post(url,postData).then(res => {
+                    this.$message.success("成功")
+                    
+                })
+            },
+            handleSizeChange(val) {
+                this.limit = val
+                this.testList()
+            },
+            search(){
+                this.page = 1
+                this.testList()
+            },
+            change(page){
+                this.page = page
+                this.testList()
+            },
+            testList() {
+                this.dataLoading = true
+                
+                $postData = {...this.searchForm,page: this.page,limit: this.limit,ccOption: 'list'}
+                http.post(url,$postData).then(res => {
+                    let d = res.data.data
+                    this.size = d.limit
+                    this.total = d.total
+                    this.tableData = d.items
+                    this.dataLoading = false
+                })
+            },
+            showAdd() {
+                this.resetForm()
+                this.dialogFormVisible = true
+            },
+            
+            one(scope) {
+                http.post(url,{
+                    order_id: scope.row.order_id,
+                    ccOption: 'one'
+                }).then(res => {
+                    this.form = res.data.data
+                })
+
+                this.dialogFormVisible = true;
+            },
+            resetForm() {
+                this.form = {
+                    order_id: ''
+                }
+            }
+            
+            
+        }
+    })
+
+</script>
+<style>
+    .el-input__inner{border:none;background:none}
+
+</style>
+{include file="public/footer" /}

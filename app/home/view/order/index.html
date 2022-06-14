@@ -1,0 +1,244 @@
+{include file="public/header" /}
+<div id="app">
+    <el-container>
+        <el-header>
+            {include file="public/menu" /} 
+        </el-header>
+        <el-main>
+           
+            <div class="cclayout">
+                
+                <el-row :gutter="20">
+                    <el-col :span="6">
+                        {include file="public/userMenu" /} 
+
+                    </el-col>
+                    <el-col :span="18">
+                        <el-card shadow="never" class="box-card">
+                            <div class="text item">
+                                <el-table
+                                    :data="tableData"
+                                    border
+                                    stripe
+                                    height="500"
+                                    size="small"
+                                    v-loading="dataLoading"
+                                    style="width: 100%">
+                                    <el-table-column width="210" prop="add_time" label="{:lang('add_time')}"></el-table-column>
+                                    <el-table-column width="210" prop="system_order" label="{:lang('system_order')}"></el-table-column>
+                                    <el-table-column prop="pay_status" label="{:lang('pay_status')}"></el-table-column>
+                                    <el-table-column align="right" prop="order_amount" label="{:lang('order_amount')}"></el-table-column>
+                                    <el-table-column align="center" fixed="right" label="{:lang('operation')}" width="60">
+                                        <template slot-scope="scope">
+                                            <el-link type="primary" @click="one(scope)">{:lang('detail')}</el-link>
+                                        </template>
+                                    </el-table-column>
+                                </el-table>
+                                <el-pagination
+                                    background
+                                    :page-sizes="[30, 60, 100, 200]"
+                                    layout="total, sizes, prev, pager, next, jumper"
+                                    :total="total" :page-size="limit"
+                                    @size-change="handleSizeChange"
+                                    @current-change="change">
+                                </el-pagination>
+                            </div>
+                        </el-card>
+
+                    </el-col>
+
+                </el-row>
+                
+            </div>
+            
+            <el-dialog :visible.sync="dialogFormVisible" width='80%'>
+                <el-descriptions title="订单详情" class="margin-top" :column="3" border>
+                    <el-descriptions-item >
+                        <template slot="label">
+                            订单日期
+                        </template>
+                        {{form.add_time}}
+                    </el-descriptions-item> 
+                    <el-descriptions-item >
+                        <template slot="label">
+                            订单编号
+                        </template>
+                        {{form.system_order}}
+                    </el-descriptions-item> 
+                    <el-descriptions-item >
+                        <template slot="label">
+                            订单金额
+                        </template>
+                        {{form.order_amount}}
+                    </el-descriptions-item> 
+                    <el-descriptions-item >
+                        <template slot="label">
+                            支付状态
+                        </template>
+                        {{form.pay_status}}
+                    </el-descriptions-item> 
+                    <el-descriptions-item >
+                        <template slot="label">
+                            收货姓名
+                        </template>
+                        {{form.name}}
+                    </el-descriptions-item> 
+                    <el-descriptions-item >
+                        <template slot="label">
+                            收货手机
+                        </template>
+                        {{form.mobile}}
+                    </el-descriptions-item> 
+                    <el-descriptions-item >
+                        <template slot="label">
+                            收货地址
+                        </template>
+                        {{form.address}}
+                    </el-descriptions-item> 
+                </el-descriptions>
+                
+                
+                    <el-table
+                        border
+                        :data="form.orderGoods"
+                        style="width: 100%">
+                        <el-table-column
+                            prop="goods_name"
+                            label="商品名称"
+                            >
+                        </el-table-column>
+                        <el-table-column
+                            prop="goods_price"
+                            label="商品单价"
+                            width="100">
+                        </el-table-column>
+                        <el-table-column
+                            prop="goods_number"
+                            label="商品数量"
+                            width="100">
+                        </el-table-column>
+                    </el-table>
+                
+            </el-dialog>
+        </el-main>
+        
+        <el-footer>
+            {include file="public/copyright" /} 
+        </el-footer>
+    </el-container>
+</div>
+<script src="/static/js/http.js"></script>
+<script>
+    const url = "/home/order"
+    var app1 = new Vue({
+        el: '#app',
+        data: {
+            tableData: [],
+            total: 0,
+            limit: 30,
+            page: 1,
+            dataLoading: false,
+            dialogFormVisible: false,
+            form: {
+                order_id: '',
+                system_order: '',
+                order_amount: '',
+                add_time: '',
+                pay_status: '',
+                address: '',
+                name: '',
+                mobile: '',
+                orderGoods: [],
+            },
+        },
+        created() {
+           this.testList()
+        },
+        methods: {
+            handleSizeChange(val) {
+                this.limit = val
+                this.testList()
+            },
+            change(page){
+                this.page = page
+                this.testList()
+            },
+            testList() {
+                this.dataLoading = true
+                
+                postData = {...this.searchForm,page: this.page,limit: this.limit,ccOption: 'list'}
+                http.post(url,postData).then(res => {
+                    let d = res.data.data
+                    this.size = d.limit
+                    this.total = d.total
+                    this.tableData = d.items
+                    this.dataLoading = false
+                })
+            },
+            one(scope) {
+                http.post(url,{
+                    order_id: scope.row.order_id,
+                    ccOption: 'one'
+                }).then(res => {
+                    this.form = res.data.data
+                })
+
+                this.dialogFormVisible = true;
+            },
+        }
+    })
+
+</script>
+
+<style>
+  .el-carousel__item h3 {
+    color: #475669;
+    font-size: 18px;
+    opacity: 0.75;
+    line-height: 300px;
+    margin: 0;
+  }
+  
+  .el-carousel__item:nth-child(2n) {
+    background-color: #99a9bf;
+  }
+  
+  .el-carousel__item:nth-child(2n+1) {
+    background-color: #d3dce6;
+  }
+  
+  
+    .time {
+    font-size: 13px;
+    color: #999;
+  }
+  
+  .bottom {
+    margin-top: 13px;
+    line-height: 12px;
+  }
+
+  .button {
+    padding: 0;
+    float: right;
+  }
+
+  .image {
+    width: 100%;
+    display: block;
+  }
+
+  .clearfix:before,
+  .clearfix:after {
+      display: table;
+      content: "";
+  }
+  
+  .clearfix:after {
+      clear: both
+  }
+  
+  .el-main,.el-card{line-height: 14px !important; text-align:left}
+  .el-col{padding-top: 10px; padding-bottom: 10px}
+</style>
+{include file="public/footer" /}

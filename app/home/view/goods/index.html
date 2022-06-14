@@ -1,0 +1,183 @@
+{include file="public/header" /}
+<div id="app">
+    <el-container>
+        <el-header>
+            {include file="public/menu" /} 
+        </el-header>
+        <el-main>
+           
+            <div class="cclayout">
+                
+                <el-row>
+                    <el-col :span="12">
+                        <el-card shadow="never" class="box-card">
+                            <div class="text item" style="height: 470px ">
+                                <img src="{$goods.goods_image_big[0]}" width="100%" />
+                            </div>
+                        </el-card>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-card shadow="never" class="box-card">
+                            <div class="text item" style="height: 470px ">
+                                <el-row><h3>{$goods.goods_name}</h3></el-row>    
+                                <el-row><el-link type="danger">¥<span id="price">{$goods.goods_price}</span></el-link></el-row>   
+                                <el-row style="padding:20px 0px">
+                                  <el-input-number v-model="goodsDetail.goods_number"  :min="1" :max="10" ></el-input-number>
+                                </el-row>  
+                                <el-row style="padding:20px 0px">
+                                    <el-button type="primary" icon="el-icon-goods" @click="tobuy" :loading="buyloading">立刻购买</el-button>
+                                    <el-button type="warning" icon="el-icon-shopping-cart-full" @click="tocart" :loading="cartloading">加入购物车</el-button>
+                                </el-row>
+                            </div>
+                        </el-card>
+                    </el-col>
+                </el-row>
+                
+                <el-row :gutter="20">
+                    <el-col :span="6">
+                        <el-card shadow="never" class="box-card">
+                            <div slot="header" class="clearfix">
+                                <span>推荐商品</span>
+                            </div>
+                            <div class="text item">
+
+                            </div>
+                        </el-card>
+                        
+                    </el-col>
+                    <el-col :span="18">
+                        <el-card shadow="never" class="box-card">
+                            <div slot="header" class="clearfix">
+                                <span>商品详情</span>
+                            </div>
+                            <div class="text item">
+                                {volist name="goods.goods_desc" id="g"}
+                                <img src="{$g}" width="100%" />
+                                {/volist}
+                            </div>
+                        </el-card>
+                        
+                    </el-col>
+                    
+                </el-row>
+            </div>
+            
+        </el-main>
+        
+        <el-footer>
+            {include file="public/copyright" /} 
+        </el-footer>
+    </el-container>
+</div>
+<script src="/static/js/http.js"></script>
+<script>
+    const url = "/home/cart"
+    var app1 = new Vue({
+        el: '#app',
+        data: {
+            goodsDetail: {
+                goods_number: 1,
+                goods_id: {$goods.goods_id}
+            },
+            
+            buyloading: false,
+            cartloading: false,
+        },
+        created() {
+            
+        },
+        methods: {
+           tobuy() {
+               this.buyloading = true
+               $postData = {...this.goodsDetail, ccOption: 'add'} 
+               http.post(url,$postData).then(res => {
+                    let rs = res.data
+                    if(rs.code == 0)
+                    {
+                        this.$message.success("{:lang('operation_success')}")
+                        setTimeout(
+                            top.window.location = '/home/cart'
+                        , 5000)
+                    }
+                    else
+                    {
+                        this.$message.error(rs.message)
+                        this.buyloading = false
+                    }
+               })
+           },
+           tocart() {
+                this.cartloading = true
+                $postData = {...this.goodsDetail, ccOption: 'add'} 
+                http.post(url,$postData).then(res => {
+                    let rs = res.data
+                    if(rs.code == 0)
+                    {
+                        this.$message.success("{:lang('operation_success')}")
+                    }
+                    else
+                    {
+                        this.$message.error(rs.message) 
+                    }
+                    this.cartloading = false
+                })
+           }
+        }
+    })
+
+</script>
+
+<style>
+  .el-carousel__item h3 {
+    color: #475669;
+    font-size: 18px;
+    opacity: 0.75;
+    line-height: 300px;
+    margin: 0;
+  }
+  
+  .el-carousel__item:nth-child(2n) {
+    background-color: #99a9bf;
+  }
+  
+  .el-carousel__item:nth-child(2n+1) {
+    background-color: #d3dce6;
+  }
+  
+  
+    .time {
+    font-size: 13px;
+    color: #999;
+  }
+  
+  .bottom {
+    margin-top: 13px;
+    line-height: 12px;
+  }
+
+  .button {
+    padding: 0;
+    float: right;
+  }
+
+  .image {
+    width: 100%;
+    display: block;
+  }
+
+  .clearfix:before,
+  .clearfix:after {
+      display: table;
+      content: "";
+  }
+  
+  .clearfix:after {
+      clear: both
+  }
+  
+  .el-main,.el-card{line-height: 14px !important; text-align:left}
+  .el-col{padding-top: 10px; padding-bottom: 10px}
+  h3{line-height: 28px}
+  #price{font-size: 32px; line-height: 50px}
+</style>
+{include file="public/footer" /}

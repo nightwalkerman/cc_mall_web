@@ -1,0 +1,155 @@
+{include file="public/header" /}
+<div id="app">
+
+        <el-row :gutter="20">
+            <el-form @submit.native.prevent :inline="true" size="small" class="demo-form-inline">
+                <el-col :span="24">
+                    <el-form-item>
+                        <el-date-picker id="date" v-model="searchForm.start_time" value-format="yyyy-MM-dd HH:mm:ss" type="datetime" placeholder="{:lang('start_time')}"></el-date-picker>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-date-picker id="date" v-model="searchForm.end_time" value-format="yyyy-MM-dd HH:mm:ss" type="datetime" placeholder="{:lang('end_time')}"></el-date-picker>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-input v-model="searchForm.system_order" clearable placeholder="{:lang('system_order')}"></el-input>
+                    </el-form-item>
+                    
+                    
+                    <el-form-item>
+                        <el-button type="primary" @click="search">{:lang('search')}</el-button>
+                    </el-form-item>
+
+                </el-col>
+                
+            </el-form>
+        </el-row>
+
+        <el-table
+                :data="tableData"
+                border
+                stripe
+                height="500"
+                size="small"
+                v-loading="dataLoading"
+                style="width: 100%">
+            <el-table-column width="150" prop="add_time" label="{:lang('add_time')}"></el-table-column>
+            <el-table-column prop="merchant_id" label="{:lang('merchant_id')}"></el-table-column>
+            <el-table-column width="210" prop="system_order" label="{:lang('system_order')}"></el-table-column>
+            <el-table-column width="210" prop="merchant_order" label="{:lang('merchant_order')}"></el-table-column>
+            <el-table-column prop="company_id" label="{:lang('wallet')}"></el-table-column>
+            <el-table-column width="100" align="right" prop="order_amount" label="{:lang('order_amount')}"></el-table-column>
+<!--            <el-table-column align="right" prop="pay_amount" label="{:lang('pay_amount')}"></el-table-column>-->
+            <el-table-column width="100" align="right" prop="rate_cost" label="{:lang('rate_cost')}"></el-table-column>
+            <el-table-column width="100" align="right" prop="rate_sell" label="{:lang('rate_sell')}"></el-table-column>
+            <el-table-column width="100" align="right" prop="order_rate" label="{:lang('order_rate')}"></el-table-column>
+            <el-table-column width="100" align="right" prop="order_sell" label="{:lang('order_sell')}"></el-table-column>
+            <el-table-column width="100" align="right" prop="order_profit" label="{:lang('order_profit')}"></el-table-column>
+            <el-table-column align="center" fixed="right" label="{:lang('operation')}" width="60">
+                <template slot-scope="scope">
+                    <el-link type="primary" @click="one(scope)">{:lang('detail')}</el-link>
+<!--                    <el-link type="danger" @click="del(scope)">{:lang('delete')}</el-link>-->
+                </template>
+            </el-table-column>
+        </el-table>
+    
+        <el-pagination
+                background
+                :page-sizes="[30, 60, 100, 200]"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="total" :page-size="limit"
+                @size-change="handleSizeChange"
+                @current-change="change">
+        </el-pagination>
+
+    <el-dialog :title="dialogFormTitle" :visible.sync="dialogFormVisible" width='80%'>
+        <el-descriptions class="margin-top" column="2" size="mini" border>
+            <el-descriptions-item v-for="(order,key) in form">
+              <template slot="label">
+                {{key}}
+              </template>
+              {{order}}
+            </el-descriptions-item>            
+        </el-descriptions>
+    </el-dialog>
+</div>
+<script src="/static/js/http.js"></script>
+<script>
+    const url = "/manager/orderList"
+    var app1 = new Vue({
+        el: '#app',
+        data: {
+            tableData: [],
+            total: 0,
+            limit: 30,
+            page: 1,
+            searchForm: {
+                system_order: '',
+                merchant_order: '',
+                merchant_id: '',
+                pay_status: '',
+                start_time: '',
+                end_time: '',
+            },
+            dialogFormVisible: false,
+            form: {
+                order_id: ''
+            },
+            dialogFormTitle: "{:lang('detail')}",
+            loadBtn: false,
+            dataLoading: false,
+        },
+        created() {
+            this.testList()
+        },
+        methods: {
+            handleSizeChange(val) {
+                this.limit = val
+                this.testList()
+            },
+            search(){
+                this.page = 1
+                this.testList()
+            },
+            change(page){
+                this.page = page
+                this.testList()
+            },
+            testList() {
+                this.dataLoading = true
+                
+                postData = {...this.searchForm,page: this.page,limit: this.limit,ccOption: 'list'}
+                http.post(url,postData).then(res => {
+                    let d = res.data.data
+                    this.size = d.limit
+                    this.total = d.total
+                    this.tableData = d.items
+                    this.dataLoading = false
+                })
+            },
+            showAdd() {
+                this.resetForm()
+                this.dialogFormVisible = true
+            },
+            
+            one(scope) {
+                http.post(url,{
+                    order_id: scope.row.order_id,
+                    ccOption: 'one'
+                }).then(res => {
+                    this.form = res.data.data
+                })
+
+                this.dialogFormVisible = true;
+            },
+            resetForm() {
+                this.form = {
+                    order_id: ''
+                }
+            }
+            
+            
+        }
+    })
+
+</script>
+{include file="public/footer" /}

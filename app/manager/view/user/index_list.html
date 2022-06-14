@@ -1,0 +1,243 @@
+{include file="public/header" /}
+<div id="app">
+
+        <el-row :gutter="20">
+            <el-form @submit.native.prevent :inline="true" size="small" class="demo-form-inline">
+                <el-col :span="16">
+
+                        <el-form-item>
+                            <el-input v-model="searchForm.username" placeholder="{:lang('username')}"></el-input>
+                        </el-form-item>
+
+                        <el-form-item>
+                            <el-button type="primary" @click="search">{:lang('search')}</el-button>
+                        </el-form-item>
+
+                </el-col>
+                <el-col :span="8">
+                    <el-form-item style="float: right">
+                        <!--<el-button type="success" icon="el-icon-plus" @click="showAdd">{:lang('add')}</el-button>-->
+                    </el-form-item>
+                </el-col>
+            </el-form>
+        </el-row>
+
+        <el-table
+                @row-dblclick="dbclick"
+                :data="tableData"
+                border
+                stripe
+                size="small"
+                height="500"
+                style="width: 100%">
+            <el-table-column prop="add_time" label="{:lang('add_time')}" width="180"></el-table-column>
+            <el-table-column prop="username" label="{:lang('username')}" ></el-table-column>
+            <el-table-column prop="nickname" label="{:lang('username')}" ></el-table-column>
+            <el-table-column prop="mobile" label="{:lang('username')}" ></el-table-column>
+            <el-table-column prop="address" label="{:lang('username')}" ></el-table-column>
+
+            <el-table-column
+                    align="center"
+                    fixed="right"
+                    label="{:lang('operation')}"
+                    width="100">
+                <template slot-scope="scope">
+                    <el-link type="primary" @click="one(scope)">{:lang('edit')}</el-link>
+                    <!--<el-link type="danger" @click="del(scope)">{:lang('delete')}</el-link>-->
+                </template>
+            </el-table-column>
+        </el-table>
+        <el-pagination
+                background
+                :page-sizes="[30, 60, 100, 200]"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="total" :page-size="limit"
+                @current-change="change"
+        >
+        </el-pagination>
+
+    <el-dialog :title="dialogFormTitle" :visible.sync="dialogFormVisible">
+        <el-form @submit.native.prevent>
+                                    
+
+                    <el-form-item label="账号" prop="username">
+                        <el-input v-model="ruleForm.username"></el-input>
+                    </el-form-item>
+                    <el-form-item label="密码" prop="password">
+                        <el-input type="password" v-model="ruleForm.password" placeholder="留空，则不修改"></el-input>
+                    </el-form-item>
+
+
+                    <el-form-item label="姓名" prop="nickname">
+                        <el-input v-model="ruleForm.nickname"></el-input>
+                    </el-form-item>
+                    <el-form-item label="手机" prop="mobile">
+                        <el-input v-model="ruleForm.mobile"></el-input>
+                    </el-form-item>
+
+                    <el-form-item label="地址" prop="address">
+                        <el-input v-model="ruleForm.address"></el-input>
+                    </el-form-item>
+
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="dialogFormVisible = false">{:lang('cancel')}</el-button>
+            <el-button type="primary" :loading="loadBtn" @click="submitForm">{:lang('confirm')}</el-button>
+        </div>
+    </el-dialog>
+</div>
+<script src="/static/js/http.js"></script>
+<script>
+    const url = "/manager/userList"
+    var app1 = new Vue({
+        el: '#app',
+        data: {
+            tableData: [],
+            total: 4,
+            limit: 10,
+            page: 1,
+            searchForm: {
+                username: '',
+            },
+            dialogFormVisible: false,
+
+            dialogFormTitle: '',
+            loadBtn: false,
+            ruleForm: {
+                username: '',
+                password: '',
+                mobile: '',
+                address: '',
+            },
+        },
+        created() {
+            this.testList()
+        },
+        methods: {
+            search(){
+                this.testList()
+            },
+            change(page){
+                this.page = page
+                this.testList()
+            },
+            testList() {
+                http.post(url,{
+                    page: this.page,
+                    limit: this.limit,
+                    username: this.searchForm.username,
+                    ccOption: 'list'
+                }).then(res => {
+                    let d = res.data.data
+                    this.size = d.limit
+                    this.total = d.total
+                    this.tableData = d.items
+                })
+            },
+            showAdd() {
+                this.resetForm()
+                this.dialogFormTitle = "{:lang('add')}",
+                this.dialogFormVisible = true
+            },
+           
+            add() {
+                this.loadBtn = true
+                let newFormData = {...this.form,ccOption: 'add'}
+                http.post(url,newFormData).then(res => {
+                    this.loadBtn = false
+                    if(res.data.code == 0)
+                    {
+                        this.$message.success("{:lang('operation_success')}");
+                        this.dialogFormVisible = false;
+                        this.testList()
+                    }
+                    else
+                    {
+                        this.$message.error(res.data.message);
+                    }
+
+                })
+            },
+            edit() {
+                this.loadBtn = true
+                let newFormData = {...this.form,ccOption: 'edit'}
+                http.post(url,newFormData).then(res => {
+                    this.loadBtn = false
+                    if(res.data.code == 0)
+                    {
+                        this.$message.success("{:lang('operation_success')}");
+                        this.dialogFormVisible = false;
+                        this.testList()
+                    }
+                    else
+                    {
+                        this.$message.error(res.data.message);
+                    }
+                })
+            },
+            one(scope) {
+                this.dialogFormTitle = "{:lang('edit')}"
+                http.post(url,{
+                    user_id: scope.row.user_id,
+                    ccOption: 'one'
+                }).then(res => {
+                    this.ruleForm = res.data.data
+                })
+
+                this.dialogFormVisible = true;
+            },
+            resetForm() {
+                this.form = {
+                    username: '',
+                    test_id: ''
+                }
+            },
+            del(scope) {
+                this.$confirm("{:lang('delete_tips')}", "{:lang('delete_title')}", {
+                    confirmButtonText: "{:lang('confirm')}",
+                    cancelButtonText: "{:lang('cancel')}",
+                    type: 'warning'
+                }).then(() => {
+                    http.post(url,{
+                        test_id: scope.row.test_id,
+                        ccOption: 'del'
+                    }).then(res => {
+                        if(res.data.code == 0) {
+                            this.$message.success("{:lang('operation_success')}");
+                            this.testList()
+                        }
+                        else
+                        {
+                            this.$message.error(res.data.message);
+                        }
+                    })
+
+                }).catch(() => {
+
+                });
+            },
+            dbclick(row, column, event) {
+                //console.log(row.test_id)
+            },
+            submitForm()
+            {
+                postData = {...this.ruleForm,ccOption: 'edit'}
+                http.post(url,postData).then(res => {
+                    if(res.data.code == 0)
+                    {
+                        this.testList()
+                        this.dialogFormVisible = false
+                        this.$message.success(res.data.message);
+                    }
+                    else
+                    {
+                        this.$message.error(res.data.message);
+                    }
+                    
+                })
+            },
+        }
+    })
+
+</script>
+{include file="public/footer" /}

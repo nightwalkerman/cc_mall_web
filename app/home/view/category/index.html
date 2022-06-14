@@ -1,0 +1,125 @@
+{include file="public/header" /}
+<div id="app">
+        <el-header style="overflow: hidden;background:rgb(84, 92, 100)">
+            {include file="public/menu" /} 
+        </el-header>
+        <el-footer style="height: 250px;overflow: hidden">
+            <p style="height:40px;dispaly:block">&nbsp;</p>
+            <p style="text-align: center; height: 50px">
+                <strong>
+                    <span style="color: rgb(32, 18, 77); font-size: 50px; font-family: arial;">{$subname[0]}</span>
+                </strong>
+            </p>
+            <p style="text-align: center; height: 50px">
+                <span style="font-size: 30px; font-family: &quot;Microsoft YaHei&quot;; color: rgb(255, 66, 90);">
+                    <strong>{$subname[1]}</strong>
+                </span>
+                
+            </p>
+        </el-footer>
+        
+        
+        <div class="el-row">
+            <div class="el-col el-col-24">
+                <div class="grid-content bg-purple-dark">
+                    
+                    
+                </div>                        
+            </div>                   
+        </div>
+        
+        
+        <div class="el-row">
+           
+            <div class="cclayout">
+                
+                <el-card class="box-card" shadow="never" style="margin-bottom: 30px">
+                    <div slot="header" class="clearfix">
+                      <span>{$article.title}</span>
+                    </div>
+                    <div class="text item">
+                        <?php echo $article['desc']; ?>
+                    </div>
+                </el-card>
+            </div>
+            
+        </div>
+        
+        <el-footer>
+            {include file="public/copyright" /} 
+        </el-footer>
+    
+</div>
+<script src="/static/js/http.js"></script>
+<script>
+    const url = "/manager/adminList"
+    var app1 = new Vue({
+        el: '#app',
+        data: {
+            currentDate: new Date()
+        },
+        created() {
+            
+        },
+        methods: {
+            
+        }
+    })
+
+</script>
+
+<style>
+  .el-carousel__item h3 {
+    color: #475669;
+    font-size: 18px;
+    opacity: 0.75;
+    line-height: 300px;
+    margin: 0;
+  }
+  
+  .el-carousel__item:nth-child(2n) {
+    background-color: #99a9bf;
+  }
+  
+  .el-carousel__item:nth-child(2n+1) {
+    background-color: #d3dce6;
+  }
+  
+  
+    .time {
+    font-size: 13px;
+    color: #999;
+  }
+  
+  .bottom {
+    margin-top: 13px;
+    line-height: 12px;
+  }
+
+  .button {
+    padding: 0;
+    float: right;
+  }
+
+  .image {
+    width: 100%;
+    display: block;
+  }
+
+  .clearfix:before,
+  .clearfix:after {
+      display: table;
+      content: "";
+  }
+  
+  .clearfix:after {
+      clear: both
+  }
+  
+  .el-main,.el-card{line-height: 14px !important; text-align:left}
+  .el-col{padding-top: 10px; padding-bottom: 10px}
+  .el-main, .el-card{height:360px}
+  #price{font-size: 22px; line-height: 22px}
+  .time{line-height: 18px}
+</style>
+{include file="public/footer" /}

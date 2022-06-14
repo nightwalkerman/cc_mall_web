@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+
+        <script src="https://cdn.jsdelivr.net/gh/xwlrbh/HandyEditor@1.9.0/HandyEditor.min.js"></script>
+        
+
+    </head>
+    <body>
+        <input type="text" name="title" id="title" style="width:100%;height:30px;margin:10px auto"></input>
+        <textarea name="desc" id="desc"></textarea>
+        <button onclick="yes()">确定</button>
+        <script>
+            var he = HE.getEditor('desc');//其中的editor是文本输入框(textarea)的id
+            //he.set("abcdefg");
+            function yes()
+            {
+                //he.sync();
+                //var txt = $("#desc").val();
+                //alert(txt);
+                var title = $("#title").val();
+                var desc = he.getHtml();
+                if(title == "")
+                {
+                    alert("标题不能为空");
+                    return;
+                }
+                if(desc == "")
+                {
+                    alert("内容不能为空");
+                    return;
+                }
+                
+                $.ajax({
+                    type : "post",
+                    data:  {'title': title, 'desc': desc},
+                    url  : "/manager/articleaddY",
+                    timeout : 10000,
+                    dataType  : "json",
+                    success : function (data){
+                        //处理事件
+                        if(data.code == "0")
+                        {
+                            alert("操作成功");
+                        }
+                        else
+                        {
+                            alert("操作失败！！！");
+                        }
+                    },
+                    error   : function(XMLHttpRequest, textStatus, errorThrown){
+                        //处理事件
+                        alert("未知错误！！！");
+                        return false;
+                    }
+                })
+
+            }
+        </script>
+    </body>
+</html>

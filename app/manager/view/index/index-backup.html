@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>CC-RBAC</title>
+    <link rel="stylesheet" type="text/css" href="/static/plugins/easyui-1.10.1/themes/material/easyui.css">
+    <link rel="stylesheet" type="text/css" href="/static/plugins/easyui-1.10.1/themes/icon.css">
+    <script type="text/javascript" src="/static/plugins/easyui-1.10.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/plugins/easyui-1.10.1/jquery.easyui.min.js"></script>
+
+    
+    <link rel="stylesheet" href="/static/plugins/vue/index.css">
+    <!-- import Vue before Element -->
+    <script src="/static/plugins/vue/vue.js"></script>
+    <!-- import JavaScript -->
+    <script src="/static/plugins/vue/index.js"></script>
+    <!-- axios -->
+    <script src="/static/plugins/vue/axios.min.js"></script>
+    <style>
+        a{text-decoration-line: none}
+        #north,#south{line-height: 45px}
+    </style>
+</head>
+<body class="easyui-layout">
+<!-- 上 北：顶部布局 -->
+<div id="north" data-options="region:'north'" style="height:50px">
+
+    <el-row>
+        <el-col :span="4">
+            <span style="font-size: 22px;font-weight: bold;padding-left: 25px">CC-RBAC</span>
+        </el-col>
+        <el-col :span="4">&nbsp;</el-col>
+        <el-col :span="4">&nbsp;</el-col>
+        <el-col :span="4">&nbsp;</el-col>
+        <el-col :span="4">&nbsp;</el-col>
+        <el-col :span="4">
+
+                <el-dropdown style="padding-right: 20px; float: right;">
+                    <span class="el-dropdown-link" icon="el-icon-plus" style="cursor: pointer">
+                    <i class="el-icon-user-solid el-icon--left"></i>Admin<i class="el-icon-arrow-down el-icon--right"></i>
+                    </span>
+                    <el-dropdown-menu slot="dropdown">
+                        <el-dropdown-item icon="el-icon-edit">{:lang('edit_password')}</el-dropdown-item>
+                        <el-dropdown-item icon="el-icon-switch-button">{:lang('logout')}</el-dropdown-item>
+
+                    </el-dropdown-menu>
+                </el-dropdown>
+
+        </el-col>
+    </el-row>
+</div>
+<!-- 下 南： 底部布局 -->
+<div id="south" data-options="region:'south',split:true" style="height:50px;">
+    <el-row>
+        <el-col :span="4">
+            <span style="font-size: 12px; padding-left: 25px">Copyright 1998 - 2022 Tencent. All Rights Reserved</span>
+        </el-col>
+        <el-col :span="4">&nbsp;</el-col>
+        <el-col :span="4">&nbsp;</el-col>
+        <el-col :span="4">&nbsp;</el-col>
+        <el-col :span="4">&nbsp;</el-col>
+        <el-col :span="4">&nbsp;</el-col>
+    </el-row>
+</div>
+
+<!-- 左 西： 左边布局 -->
+<div id="west" data-options="region:'west',split:true" style="width:200px;">
+    <el-menu
+            default-active="2"
+            class="el-menu-vertical-demo">
+        {volist name="menu" id="m1" key="k1"}
+        <el-submenu index="{$k1+1}">
+            <template slot="title">
+                <i class="{$m1.icon}"></i>
+                <span>{:lang($m1.node_name)}</span>
+            </template>
+            {volist name="m1.children" id="m2" key="k2"}
+            <a href="javascript:addTab('{:lang($m2.node_name)}','{$m2.node_action}','{$m2.icon}')" >
+            <el-menu-item index="{$k1+1}-{$k2+1}"><i class="{$m2.icon}"></i>{:lang($m2.node_name)}</el-menu-item>
+            </a>
+            {/volist}
+        </el-submenu>
+        {/volist}
+    </el-menu>
+</div>
+<div id="center" data-options="region:'center',split:false,border:false,collapsible:false">
+    <div id="main_tabs" class="easyui-tabs" data-options="tools:'#tab-tools',fit:true,split:false,collapsible:false">
+
+    </div>
+</div>
+</body>
+<script type="text/javascript">
+    var index = 0;
+    function addPanel(){
+        index++;
+        $('#main_tabs').tabs('add',{
+            title: 'Tab'+index,
+            iconCls:'icon-help',
+            content: '<div style="padding:10px">Content'+index+'</div>',
+            closable: false
+        });
+    }
+    function removePanel(){
+        var tab = $('#main_tabs').tabs('getSelected');
+        if (tab){
+            var index = $('#main_tabs').tabs('getTabIndex', tab);
+            $('#main_tabs').tabs('close', index);
+        }
+    }
+
+    function addTab(title, href,icon){
+        var main_tabs = $('#main_tabs');
+
+        if (main_tabs.tabs('exists', title)){
+            //如果tab已经存在,则选中并刷新该tab
+            main_tabs.tabs('select', title);
+            //refreshTab({tabTitle:title,url:href});
+        } else {
+            if (href){
+                var content = '<iframe scrolling="auto" frameborder="0"  src="'+href+'" style="width:100%;height:100%"></iframe>';
+            } else {
+                var content = '更新中。。。';
+            }
+            main_tabs.tabs('add',{
+                title:title,
+                closable:true,
+                content:content,
+                iconCls:icon
+            });
+        }
+    }
+
+    $(function(){
+        //初始化綁定雙擊事件
+        $('#main_tabs').tabs('bindDblclick', function(index, title){
+            removePanel();
+        });
+        //初始化加載首頁
+        addTab("{:lang('home')}","/manager/home","el-icon-s-home");
+    });
+
+    $.extend($.fn.tabs.methods, {
+        /**
+         * 绑定双击事件
+         * @param {Object} jq
+         * @param {Object} caller 绑定的事件处理程序
+         */
+        bindDblclick: function(jq, caller){
+            return jq.each(function(){
+                var that = this;
+                $(this).children("div.tabs-header").find("ul.tabs").undelegate('li', 'dblclick.tabs').delegate('li', 'dblclick.tabs', function(e){
+                    if (caller && typeof(caller) == 'function') {
+                        var title = $(this).text();
+                        var index = $(that).tabs('getTabIndex', $(that).tabs('getTab', title));
+                        caller(index, title);
+                    }
+                });
+            });
+        },
+        /**
+         * 解除绑定双击事件
+         * @param {Object} jq
+         */
+        unbindDblclick: function(jq){
+            return jq.each(function(){
+                $(this).children("div.tabs-header").find("ul.tabs").undelegate('li', 'dblclick.tabs');
+            });
+        }
+    });
+
+    var app1 = new Vue({
+        el: '#west',
+        data: {
+
+        }
+    })
+    var app2 = new Vue({
+        el: '#north',
+        data: {
+
+        }
+    })
+</script>
+</html>

@@ -1,0 +1,16 @@
+version: "3.8"
+services:
+  web:
+    image: nightwalkerman/nw-lamp-debian-10:2.0
+    restart: always
+    ports:
+      - "1690:80"
+    volumes:
+      - /Users/xyz/Documents/www/cc_mall_web:/var/www
+      - /Users/xyz/Documents/www/cc_mall_web/sites-enabled:/etc/apache2/sites-enabled
+    networks:
+      - mynet
+
+networks:
+   mynet:
+     external: true

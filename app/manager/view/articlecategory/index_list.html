@@ -1,0 +1,266 @@
+{include file="public/header" /}
+<div id="app">
+
+        <el-row :gutter="20">
+            <el-form @submit.native.prevent :inline="true" size="small" class="demo-form-inline">
+                <el-col :span="16">
+
+                        <el-form-item>
+                            <el-input v-model="searchForm.category_name" placeholder="{:lang('category_name')}"></el-input>
+                        </el-form-item>
+
+                        <el-form-item>
+                            <el-button type="primary" @click="search">{:lang('search')}</el-button>
+                        </el-form-item>
+
+                </el-col>
+                <el-col :span="8">
+                    <el-form-item style="float: right">
+                    <el-button type="success" icon="el-icon-plus" @click="showAdd">{:lang('add')}</el-button>
+                    </el-form-item>
+                </el-col>
+            </el-form>
+        </el-row>
+
+        <el-table
+                @row-dblclick="dbclick"
+                :data="tableData"
+                border
+                stripe
+                height="500"
+                size="small"
+                v-loading="loading"
+                style="width: 100%">
+            <el-table-column
+                    prop="add_time"
+                    label="{:lang('add_time')}"
+                    width="180">
+            </el-table-column>
+            <el-table-column
+                    prop="category_id"
+                    label="{:lang('category_id')}"
+                    width="180">
+            </el-table-column>
+            <el-table-column
+                    prop="parent_id"
+                    label="{:lang('parent_id')}"
+                    width="180"
+                    >
+            </el-table-column>
+            <el-table-column
+                    prop="category_name"
+                    label="{:lang('category_name')}"
+                    >
+            </el-table-column>
+            <el-table-column
+                    prop="category_url"
+                    label="{:lang('category_url')}"
+                    >
+            </el-table-column>
+            <el-table-column
+                    align="center"
+                    fixed="right"
+                    label="{:lang('operation')}"
+                    width="100">
+                <template slot-scope="scope">
+                    <el-link type="primary" @click="one(scope)">{:lang('edit')}</el-link>
+                    <el-link type="danger" @click="del(scope)">{:lang('delete')}</el-link>
+                </template>
+            </el-table-column>
+        </el-table>
+        <el-pagination
+                background
+                :page-sizes="[30, 60, 100, 200]"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="total" :page-size="limit"
+                @current-change="change"
+        >
+        </el-pagination>
+
+    <el-dialog :title="dialogFormTitle" :visible.sync="dialogFormVisible">
+        <el-form @submit.native.prevent label-width="80px">
+            
+            <el-form-item label="{:lang('parent_id')}">
+                <el-select v-model="form.parent_id" clearable placeholder="上级分类">
+                    <el-option
+                      v-for="item in tableData"
+                      :key="item.category_id"
+                      :label="item.category_name"
+                      :value="item.category_id">
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            
+            <el-form-item label="{:lang('category_name')}" >
+                <el-input v-model="form.category_name" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item label="{:lang('subname')}" >
+                <el-input v-model="form.subname" autocomplete="off"></el-input>
+            </el-form-item>
+            
+            <el-form-item label="{:lang('category_url')}" >
+                <el-input v-model="form.category_url" autocomplete="off"></el-input>
+            </el-form-item>
+            
+            <el-form-item label="{:lang('article_id')}" >
+                <el-input v-model="form.article_id" autocomplete="off"></el-input>
+            </el-form-item>
+            
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="dialogFormVisible = false">{:lang('cancel')}</el-button>
+            <el-button type="primary" :loading="loadBtn" @click="confirm">{:lang('confirm')}</el-button>
+        </div>
+    </el-dialog>
+</div>
+<script src="/static/js/http.js"></script>
+<script>
+    const url = "/manager/articlecategory"
+    var app1 = new Vue({
+        el: '#app',
+        data: {
+            tableData: [],
+            total: 4,
+            limit: 10,
+            page: 1,
+            searchForm: {
+                category_name: '',
+            },
+            dialogFormVisible: false,
+            form: {
+                category_name: '',
+                category_id: '',
+                parent_id: '',
+            },
+            dialogFormTitle: '',
+            loadBtn: false,
+            loading: false,
+        },
+        created() {
+            this.testList()
+        },
+        methods: {
+            search(){
+                this.testList()
+            },
+            change(page){
+                this.page = page
+                this.testList()
+            },
+            testList() {
+                this.loading = true
+                http.post(url,{
+                    page: this.page,
+                    limit: this.limit,
+                    category_name: this.searchForm.category_name,
+                    ccOption: 'list'
+                }).then(res => {
+                    let d = res.data.data
+                    this.size = d.limit
+                    this.total = d.total
+                    this.tableData = d.items
+                    this.loading = false
+                })
+            },
+            showAdd() {
+                this.resetForm()
+                this.dialogFormTitle = "{:lang('add')}",
+                this.dialogFormVisible = true
+            },
+            confirm() {
+                if(this.form.category_id == '')
+                {
+                    this.add()
+                }
+                else
+                {
+                    this.edit()
+                }
+            },
+            add() {
+                this.loadBtn = true
+                let newFormData = {...this.form,ccOption: 'add'}
+                http.post(url,newFormData).then(res => {
+                    this.loadBtn = false
+                    if(res.data.code == 0)
+                    {
+                        this.$message.success("{:lang('operation_success')}");
+                        this.dialogFormVisible = false;
+                        this.testList()
+                    }
+                    else
+                    {
+                        this.$message.error(res.data.message);
+                    }
+
+                })
+            },
+            edit() {
+                this.loadBtn = true
+                let newFormData = {...this.form,ccOption: 'edit'}
+                http.post(url,newFormData).then(res => {
+                    this.loadBtn = false
+                    if(res.data.code == 0)
+                    {
+                        this.$message.success("{:lang('operation_success')}");
+                        this.dialogFormVisible = false;
+                        this.testList()
+                    }
+                    else
+                    {
+                        this.$message.error(res.data.message);
+                    }
+                })
+            },
+            one(scope) {
+                this.dialogFormTitle = "{:lang('edit')}"
+                http.post(url,{
+                    category_id: scope.row.category_id,
+                    ccOption: 'one'
+                }).then(res => {
+                    this.form = res.data.data
+                })
+
+                this.dialogFormVisible = true;
+            },
+            resetForm() {
+                this.form = {
+                    category_name: '',
+                    category_id: '',
+                    parent_id: "",
+                    article_id: "",
+                    category_url: "",
+                }
+            },
+            del(scope) {
+                this.$confirm("{:lang('delete_tips')}", "{:lang('delete_title')}", {
+                    confirmButtonText: "{:lang('confirm')}",
+                    cancelButtonText: "{:lang('cancel')}",
+                    type: 'warning'
+                }).then(() => {
+                    http.post(url,{
+                        category_id: scope.row.category_id,
+                        ccOption: 'del'
+                    }).then(res => {
+                        if(res.data.code == 0) {
+                            this.$message.success("{:lang('operation_success')}");
+                            this.testList()
+                        }
+                        else
+                        {
+                            this.$message.error(res.data.message);
+                        }
+                    })
+
+                }).catch(() => {
+
+                });
+            },
+            dbclick(row, column, event) {
+                //console.log(row.category_id)
+            }
+        }
+    })
+
+</script>
+{include file="public/footer" /}

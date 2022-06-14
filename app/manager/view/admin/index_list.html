@@ -1,0 +1,364 @@
+{include file="public/header" /}
+<div id="app">
+
+        <el-row :gutter="20">
+            <el-form @submit.native.prevent :inline="true" size="small" class="demo-form-inline">
+                <el-col :span="16">
+
+                        <el-form-item>
+                            <el-input v-model="searchForm.username" placeholder="{:lang('username')}"></el-input>
+                        </el-form-item>
+
+                        <el-form-item>
+                            <el-button type="primary" @click="search">{:lang('search')}</el-button>
+                        </el-form-item>
+
+                </el-col>
+                <el-col :span="8">
+                    <el-form-item style="float: right">
+                        <el-button type="success" icon="el-icon-plus" @click="showAdd">{:lang('add')}</el-button>
+                    </el-form-item>
+                    
+                </el-col>
+            </el-form>    
+        </el-row>
+
+        <el-table
+                @row-dblclick="dbclick"
+                :data="tableData"
+                border
+                stripe
+                height="500"
+                size="small"
+                style="width: 100%">
+            <el-table-column
+                    prop="add_time"
+                    label="{:lang('add_time')}"
+                    width="180">
+            </el-table-column>
+            <el-table-column
+                    prop="username"
+                    label="{:lang('username')}"
+                    >
+            </el-table-column>
+            <el-table-column
+                    prop="nickname"
+                    label="{:lang('admin_nickname')}"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="role.role_name"
+                    label="{:lang('admin_role')}"
+            >
+                <template slot-scope="scope">
+                    <el-tag size="mini" type="success">{{scope.row.role.role_name}}</el-tag>
+                </template>
+            </el-table-column>
+            <el-table-column
+                    prop="mobile"
+                    label="{:lang('admin_mobile')}"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="email"
+                    label="{:lang('admin_email')}"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="remark"
+                    label="{:lang('remark')}"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="enabled"
+                    label="{:lang('enabled')}"
+            >
+                <template slot-scope="scope">
+                    <el-switch
+                            v-model="scope.row.enabled"
+                            active-value="1"
+                            active-color="#13ce66"
+
+                            inactive-value="2"
+                            inactive-color="#ff4949"
+                    >
+                    </el-switch>
+                </template>
+            </el-table-column>
+
+            <el-table-column
+                    align="center"
+                    fixed="right"
+                    label="{:lang('operation')}"
+                    width="100">
+                <template slot-scope="scope" v-if="scope.row.admin_id != 1">
+                    <el-link type="primary" @click="one(scope)">{:lang('edit')}</el-link>
+                    <el-link type="danger" @click="del(scope)">{:lang('delete')}</el-link>
+                </template>
+            </el-table-column>
+        </el-table>
+        <el-pagination
+                background
+                layout="prev, pager, next"
+                :total="total" :page-size="limit"
+                @current-change="change"
+        >
+        </el-pagination>
+
+    <el-dialog id="dialog" :title="dialogFormTitle" :visible.sync="dialogFormVisible">
+        <el-form @submit.native.prevent>
+
+            <el-descriptions class="margin-top" :column="2" size="" border>
+
+                <el-descriptions-item>
+                    <template slot="label">
+                        {:lang('username')}
+                    </template>
+                    <el-input v-model="form.username" placeholder=""></el-input>
+                </el-descriptions-item>
+                <el-descriptions-item>
+                    <template slot="label">
+                        {:lang('password')}
+                    </template>
+                    <el-input type="password" v-model="form.password" placeholder="{:lang('password_tips')}"></el-input>
+                </el-descriptions-item>
+                <el-descriptions-item>
+                    <template slot="label">
+                        {:lang('admin_nickname')}
+                    </template>
+                    <el-input v-model="form.nickname" placeholder=""></el-input>
+                </el-descriptions-item>
+                <el-descriptions-item>
+                    <template slot="label">
+                        {:lang('admin_mobile')}
+                    </template>
+                    <el-input v-model="form.mobile" placeholder=""></el-input>
+                </el-descriptions-item>
+                <el-descriptions-item>
+                    <template slot="label">
+                        {:lang('admin_email')}
+                    </template>
+                    <el-input v-model="form.email" placeholder=""></el-input>
+                </el-descriptions-item>
+                <el-descriptions-item>
+                    <template slot="label">
+                        {:lang('remark')}
+                    </template>
+                    <el-input v-model="form.remark" placeholder=""></el-input>
+                </el-descriptions-item>
+                <el-descriptions-item>
+                    <template slot="label">
+                        {:lang('enabled')}
+                    </template>
+                    <el-switch
+                            v-model="form.enabled"
+                            active-text="正常"
+                            active-value="1"
+                            active-color="#13ce66"
+
+                            inactive-text="冻结"
+                            inactive-value="2"
+                            inactive-color="#ff4949"
+                    >
+                    </el-switch>
+
+                </el-descriptions-item>
+                <el-descriptions-item>
+                    <template slot="label">
+                        {:lang('admin_role')}
+                    </template>
+                    <el-select v-model="form.role_id" placeholder="{:lang('role_tips')}">
+                        <el-option
+                                v-for="item in roleOptions"
+                                :key="item.value"
+                                :label="item.role_name"
+                                :value="item.role_id">
+                        </el-option>
+                    </el-select>
+                </el-descriptions-item>
+            </el-descriptions>
+
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="dialogFormVisible = false">{:lang('cancel')}</el-button>
+            <el-button type="primary" :loading="loadBtn" @click="confirm">{:lang('confirm')}</el-button>
+        </div>
+    </el-dialog>
+</div>
+<script src="/static/js/http.js"></script>
+<script>
+    const url = "/manager/adminList"
+    var app1 = new Vue({
+        el: '#app',
+        data: {
+            tableData: [],
+            total: 4,
+            limit: 10,
+            page: 1,
+            searchForm: {
+                username: '',
+            },
+            dialogFormVisible: false,
+            form: {
+                username: '',
+                password: '',
+                nickname: '',
+                email: '',
+                mobile: '',
+                remark: '',
+                role_id: '',
+                admin_id: '',
+                enabled: "1"
+            },
+            dialogFormTitle: '',
+            roleOptions: [],
+            loadBtn: false,
+        },
+        created() {
+            this.testList()
+            this.roleList()
+        },
+        methods: {
+            search(){
+                this.testList()
+            },
+            change(page){
+                this.page = page
+                this.testList()
+            },
+            testList() {
+                http.post(url,{
+                    page: this.page,
+                    limit: this.limit,
+                    username: this.searchForm.username,
+                    ccOption: 'list'
+                }).then(res => {
+                    let d = res.data.data
+                    this.size = d.limit
+                    this.total = d.total
+                    this.tableData = d.items
+                })
+            },
+            roleList() {
+                http.post("/manager/roleList",{
+                    page: 1,
+                    limit: 100,
+                    role_name: '',
+                    ccOption: 'list'
+                }).then(res => {
+                    let d = res.data.data
+                    this.roleOptions = d.items
+                })
+            },
+            showAdd() {
+                this.resetForm()
+                this.dialogFormTitle = "{:lang('add')}",
+                this.dialogFormVisible = true
+            },
+            confirm() {
+                if(this.form.admin_id == '')
+                {
+                    this.add()
+                }
+                else
+                {
+                    this.edit()
+                }
+            },
+            add() {
+                this.loadBtn = true
+                let newFormData = {...this.form,ccOption: 'add'}
+                http.post(url,newFormData).then(res => {
+                    this.loadBtn = false
+                    if(res.data.code == 0)
+                    {
+                        this.$message.success("{:lang('operation_success')}");
+                        this.dialogFormVisible = false;
+                        this.testList()
+                    }
+                    else
+                    {
+                        this.$message.error(res.data.message);
+                    }
+                })
+            },
+            edit() {
+                this.loadBtn = true
+                let newFormData = {...this.form,ccOption: 'edit'}
+                http.post(url,newFormData).then(res => {
+                    this.loadBtn = false
+                    if(res.data.code == 0)
+                    {
+                        this.$message.success("{:lang('operation_success')}");
+                        this.dialogFormVisible = false;
+                        this.testList()
+                    }
+                    else
+                    {
+                        this.$message.error(res.data.message);
+                    }
+                })
+            },
+            one(scope) {
+                this.dialogFormTitle = "{:lang('edit')}"
+                http.post(url,{
+                    admin_id: scope.row.admin_id,
+                    ccOption: 'one'
+                }).then(res => {
+                    this.form = res.data.data
+                })
+
+                this.dialogFormVisible = true;
+            },
+            resetForm() {
+                this.form = {
+                    username: '',
+                    password: '',
+                    nickname: '',
+                    email: '',
+                    mobile: '',
+                    remark: '',
+                    role_id: '',
+                    admin_id: '',
+                    enabled: "1"
+                }
+            },
+            del(scope) {
+                this.$confirm("{:lang('delete_tips')}", "{:lang('delete_title')}", {
+                    confirmButtonText: "{:lang('confirm')}",
+                    cancelButtonText: "{:lang('cancel')}",
+                    type: 'warning'
+                }).then(() => {
+                    http.delete(url,{
+                        admin_id: scope.row.admin_id,
+                        ccOption: 'del'
+                    }).then(res => {
+                        if(res.data.code == 0)
+                        {
+                            this.$message.success("{:lang('operation_success')}");
+                            this.testList()
+                        }
+                        else
+                        {
+                            this.$message.error(res.data.message);
+                        }
+                    })
+
+                }).catch(() => {
+
+                });
+            },
+            dbclick(row, column, event) {
+                //console.log(row.test_id)
+            }
+        }
+    })
+
+</script>
+<style>
+    #dialog input[type="text"],#dialog input[type="password"] {
+        border:none !important;
+    }
+    .cclayout{width:980px;margin:auto}
+</style>
+{include file="public/footer" /}

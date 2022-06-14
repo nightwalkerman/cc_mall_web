@@ -1,0 +1,292 @@
+{include file="public/header" /}
+<div id="app">
+    <el-container>
+        <el-header>
+            {include file="public/menu" /} 
+        </el-header>
+        <el-main>
+           
+            <div class="cclayout">
+                
+                <el-card  shadow="never" class="box-card" style="margin:10px auto;">
+                    <div slot="header" class="clearfix">
+                        购物车
+                        
+                    </div>
+                    <div class="text item">
+                        
+                        <el-table
+                            v-loading="tableLoading"
+                            :data="tableData"
+                            stripe
+                            style="width: 100%">
+                            <el-table-column
+                                prop="goods_name"
+                                label="商品名称"
+                                width="600">
+                            </el-table-column>
+                            <el-table-column
+                                prop="goods_price"
+                                label="商品价格"
+                                >
+                            </el-table-column>
+                            <el-table-column
+                                prop="goods_number"
+                                width="200"
+                                label="商品数量">
+                                <template slot-scope="scope">
+                                    <el-input-number v-model="scope.row.goods_number" @change="handleChange(scope.row)" size="small" :min="1" :max="10"></el-input-number>
+                                </template>
+                            </el-table-column>
+                            
+                            <el-table-column 
+                                label="操作">
+                                <template slot-scope="scope">
+                                    
+                                    <el-button
+                                      size="mini"
+                                      type="danger"
+                                      @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+
+                    </div>
+                </el-card>
+                
+                <el-card  shadow="never" class="box-card" style="margin:10px auto;">
+                    <div slot="header" class="clearfix">
+                        配送信息
+                        
+                    </div>
+                    <div class="text item">
+                        <el-descriptions :column="3">
+                            <el-descriptions-item label="姓名"><el-input v-model="order.nickname"></el-input></el-descriptions-item>
+                            <el-descriptions-item label="手机"><el-input v-model="order.mobile"></el-input></el-descriptions-item>
+                            <el-descriptions-item label="物流">
+                                <el-select placeholder="请选择" v-model="order.send" style="with:300px">
+                                    <el-option label="货到付款" value="payoffline"></el-option>
+                                    <el-option label="在线支付" value="payonline"></el-option>
+                                </el-select>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="地址"><el-input v-model="order.address"></el-input></el-descriptions-item>
+                        </el-descriptions>
+                        
+                        <el-row>
+                            <el-button :disabled="isToCart" type="primary" style="float:right;margin-top:20px" :loading="doneload" @click="done">下一步</el-button>
+                        </el-row>
+                        
+                    </div>
+                </el-card>
+                
+                
+            </div>
+            
+        </el-main>
+        
+        <el-footer>
+            {include file="public/copyright" /} 
+        </el-footer>
+    </el-container>
+</div>
+<script src="/static/js/http.js"></script>
+<script>
+    const url = "/home/cart"
+    var app1 = new Vue({
+        el: '#app',
+        data: {
+            isToCart: true,
+            doneload: false,
+            tableLoading: false,
+            tableData: [],
+            total: 4,
+            limit: 10,
+            page: 1,
+            ruleForm: {
+                username: '',
+                password: '',
+                captcha: '',               
+            },
+            rules: {
+              username: [
+                { required: true, message: '请输入账号', trigger: 'blur' },
+              ],
+              password: [
+                { required: true, message: '请输入密码', trigger: 'blur' },
+              ],
+              captcha: [
+                { required: true, message: '请输入验证码', trigger: 'blur' },
+              ],
+            },
+            order: {
+                nickname: '',
+                mobile: '',
+                address: '',
+                user_id: '',
+            }
+        },
+        created() {
+            this.testList()
+            this.userInfo()
+        },
+        methods: {
+            submitForm(formName) {
+                this.$refs[formName].validate((valid) => {
+                  if (valid) {
+                    alert('submit!');
+                  } else {
+                    console.log('error submit!!');
+                    return false;
+                  }
+                });
+            },
+            userInfo()
+            {
+                this.tableLoading = true
+                http.post("/home/user",{
+                    ccOption: 'one'
+                }).then(res => {
+                    if(res.data.code == 0)
+                    {
+                        let d = res.data
+                        this.order = d.data
+                    }
+                    
+                })
+            },
+            testList() 
+            {
+                this.tableLoading = true
+                http.post(url,{
+                    page: this.page,
+                    limit: this.limit,
+                    ccOption: 'list'
+                }).then(res => {
+                    if(res.data.code == 0)
+                    {
+                        let d = res.data.data
+                        this.size = d.limit
+                        this.total = d.total
+                        this.tableData = d.items
+
+                        if(this.total == 0)
+                        {                         
+                            this.isToCart = true;
+                        }
+                        else
+                        {
+                            this.isToCart = false;
+                        }
+                    }
+                    else
+                    {
+                        this.$message.error(res.data.message);
+                        top.window.location = '/home/signin'
+                    }
+                    this.tableLoading = false
+                })
+            },
+            handleDelete(index,row)
+            {
+                formData = {...row,ccOption: 'del'}
+                http.post(url,formData).then(res => {
+                    if(res.data.code == 0)
+                    {
+                        this.testList()
+                    }
+                    else
+                    {
+                        this.$message.error(res.data.message);
+                    }
+                })
+            },
+            handleChange(row)
+            {
+                formData = {...row,ccOption: 'edit'}
+                http.post(url,formData).then(res => {
+                    if(res.data.code == 0)
+                    {
+                        //this.testList()
+                    }
+                    else
+                    {
+                        //this.$message.error(res.data.message);
+                    }
+                })
+            },
+            done()
+            {
+                this.doneload = true
+                formData = {...this.order,ccOption: 'cart'}
+                http.post("/home/order",formData).then(res => {
+                    if(res.data.code == 0)
+                    {
+                        top.window.location = "/home/done"
+                    }
+                    else
+                    {
+                        this.$message.error(res.data.message);
+                        this.doneload = false
+                    }                    
+                })
+            },
+        }
+    })
+
+</script>
+
+<style>
+  .el-carousel__item h3 {
+    color: #475669;
+    font-size: 18px;
+    opacity: 0.75;
+    line-height: 300px;
+    margin: 0;
+  }
+  
+  .el-carousel__item:nth-child(2n) {
+    background-color: #99a9bf;
+  }
+  
+  .el-carousel__item:nth-child(2n+1) {
+    background-color: #d3dce6;
+  }
+  
+  
+    .time {
+    font-size: 13px;
+    color: #999;
+  }
+  
+  .bottom {
+    margin-top: 13px;
+    line-height: 12px;
+  }
+
+  .button {
+    padding: 0;
+    float: right;
+  }
+
+  .image {
+    width: 100%;
+    display: block;
+  }
+
+  .clearfix:before,
+  .clearfix:after {
+      display: table;
+      content: "";
+  }
+  
+  .clearfix:after {
+      clear: both
+  }
+  
+  .el-main,.el-card{line-height: 14px !important; text-align:left}
+  .el-col{padding-top: 10px; padding-bottom: 10px}
+  #captcha{height:40px;float:right}
+  
+  .el-descriptions-item__label:not(.is-bordered-label){padding:0px 10px; line-height: 40px}
+</style>
+{include file="public/footer" /}

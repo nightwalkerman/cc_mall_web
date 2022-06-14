@@ -1,0 +1,35 @@
+
+<el-menu
+    class="el-menu-demo cclayout"
+    mode="horizontal"
+    background-color="#545c64"
+    active-background-color="#545c64"
+    text-color="#fff"
+    active-text-color="#ffd04b">
+    <div style="width:200px; float: left; text-align: left;  font-weight:bold; line-height: 60px; font-size:28px">
+        <a href="/home" style="color:#fff;" >{$config.name}</a>
+    </div>
+    
+    <div id="mainMenu" style="width:620px;float: right;height:60px;overflow:hidden;text-align: right; ">
+    <el-link :underline="false" href="/home" type="info">首页</el-link>  
+    {volist name="menu" id="m" key="k"}  
+        <el-link :underline="false" href="{if $m.category_url neq ''}{$m.category_url}{else}/home/category/{$m.category_id}{/if}" type="info">{$m.category_name}</el-link>  
+    {/volist}
+    </div>
+    
+
+    <div id="userinfo" style="width:200px; height:60px;overflow:hidden;float:right; text-align: right;display:none">
+    <el-link :underline="false" href="/home/cart" type="info" icon="el-icon-shopping-cart-full">购物车</el-link>  
+    {if $Request.session.user}
+        <el-link :underline="false" href="/home/user" type="info" icon="el-icon-user">{$Request.session.user.username}</el-link> 
+        <el-link :underline="false" href="/home/signout" type="info" icon="el-icon-thumb">退出</el-link> 
+    {else}
+        <el-link :underline="false" href="/home/signin" type="info" icon="el-icon-user">登陆</el-link> 
+        <el-link :underline="false" href="/home/signup" type="info" icon="el-icon-thumb">注册</el-link> 
+    {/if}
+    </div>
+</el-menu>
+
+<style>
+.el-divider__text, .el-link{padding:0 10px}  
+</style>
