@@ -12,12 +12,15 @@ class Jctest
 //            ) 
 //        ));  
 //        file_get_contents("http://localhost:8000/demo/delay",0,$context);
-        $data = array(
-            "id" => "aaa"
-        );
-        $str = Http::fileGetContents("http://127.0.0.1:20001/demo/test/a");
-        return "aaa|".$str."|done";
+//        $data = array(
+//            "id" => "aaa"
+//        );
+//        $str = Http::fileGetContents("http://127.0.0.1:20001/demo/test/a");
+//        return "aaa|".$str."|done";
+        
+        $this->t("aaa","bbb","ccc");
     }
+    
     
     public function delay()
     {
@@ -25,5 +28,9 @@ class Jctest
         return "aa";
     }
     
+    public function t(...$agrs)
+    {
+        dump($agrs);
+    }
     
 }
